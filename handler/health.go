@@ -3,6 +3,7 @@ package handler
 import (
 	"EchoSentry/model"
 	"fmt"
+	"github.com/getsentry/sentry-go"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
@@ -39,13 +40,17 @@ func (h *Handler) NewBuilding(c echo.Context) (err error) {
 }
 
 func (h *Handler) ListBuildings(c echo.Context) (err error) {
-	session := h.DB.Context(c.Request().Context())
+	myContext := c.Request().Context()
+
+	span := sentry.StartSpan(c.Request().Context(), "handler")
+
+	session := h.DB.Context(myContext)
 
 	buildings := make([]model.Building, 0)
 
 	if err := session.Find(&buildings); err != nil {
 		fmt.Println("There has been an error", err)
 	}
-
+	span.Finish()
 	return c.JSON(http.StatusOK, buildings)
 }
