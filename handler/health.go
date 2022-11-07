@@ -16,7 +16,7 @@ func (h *Handler) Health(c echo.Context) (err error) {
 func (h *Handler) Hello(c echo.Context) (err error) {
 	name := c.QueryParam("name")
 
-	res, err := h.DB.Query("SELECT * FROM table;")
+	res, err := h.DB.Query("SELECT * FROM buildings;")
 
 	fmt.Println(res, err)
 	if err != nil {
