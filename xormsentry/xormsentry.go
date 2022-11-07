@@ -32,7 +32,6 @@ var xormHookSpanKey = &xormHookSpan{}
 func before(c *contexts.ContextHook) (context.Context, error) {
 
 	fmt.Println("Before SPAN")
-
 	transaction := sentry.TransactionFromContext(c.Ctx.(context.Context))
 
 	fmt.Println("TRANSACTION:", transaction)
