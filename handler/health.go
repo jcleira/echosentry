@@ -29,13 +29,39 @@ func (h *Handler) Hello(c echo.Context) (err error) {
 }
 
 func (h *Handler) NewBuilding(c echo.Context) (err error) {
+	// Now on every layer we might start its own Span
+	span := sentry.StartSpan(c.Request().Context(), "handler")
+	defer span.Finish()
+
 	building := new(model.Building)
 	building.Name = "My Building - " + time.Now().Format("15-01-05")
-	if affected, err := h.DB.Insert(building); err != nil {
+
+	// When there is a method where we don't have control, we could use a closure
+	//
+	// There is no need to use a closure but it's convenient because it allows us
+	// to use defer, but we could also just call StartSpan/Finish without the
+	// closure.
+	//
+	// But let's say that the Insert method is something "ours", we need to send
+	// c.Request.Context() down as a context.Context, so that method could make
+	// their own sentry.StartSpan calls.
+	buildingInsert := func(building *model.Building) (int64, error) {
+		span := sentry.StartSpan(c.Request().Context(), "DB insert")
+		defer span.Finish()
+
+		if affected, err := h.DB.Insert(building); err != nil {
+			return affected, err
+		} else {
+			return affected, nil
+		}
+	}
+
+	if affected, err := buildingInsert(building); err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println(affected)
 	}
+
 	return c.JSON(http.StatusOK, building)
 }
 
