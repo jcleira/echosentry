@@ -49,7 +49,8 @@ func (h *Handler) NewBuilding(c echo.Context) (err error) {
 		span := sentry.StartSpan(c.Request().Context(), "DB insert")
 		defer span.Finish()
 
-		if affected, err := h.DB.Insert(building); err != nil {
+		db := h.DB.Context(c.Request().Context())
+		if affected, err := db.Insert(building); err != nil {
 			return affected, err
 		} else {
 			return affected, nil
