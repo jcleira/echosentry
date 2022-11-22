@@ -10,16 +10,19 @@ import (
 	"EchoSentry/model"
 	"EchoSentry/xormsentry"
 	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/getsentry/sentry-go"
-	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	_ "github.com/mattn/go-sqlite3"
-	"net/http"
-	"strconv"
-	"time"
+	"github.com/spf13/viper"
 	"xorm.io/xorm"
+
+	sentryecho "github.com/getsentry/sentry-go/echo"
 )
 
 func customHTTPErrorHandler(err error, c echo.Context) {
@@ -92,4 +95,35 @@ func main() {
 
 	// address := ":" + strconv.Itoa(config.Port)
 	e.Logger.Fatal(e.Start(":" + strconv.Itoa(config.Port)))
+}
+
+type Config struct {
+	Port      int
+	Database  string
+	SentryDsn string
+}
+
+func loadConfig() *Config {
+	cfg := &Config{
+		Port:      1234,
+		Database:  "myfile.db",
+		SentryDsn: "https://565ab10db08448289861fe107cb0867b@o913183.ingest.sentry.io/6469771",
+	}
+
+	viper.SetConfigName("front-test")
+	viper.SetEnvPrefix("ft")
+
+	viper.BindEnv("PORT")
+	viper.BindEnv("DATABASE")
+
+	//Flags
+	viper.AutomaticEnv()
+
+	viper.ReadInConfig()
+
+	if err := viper.Unmarshal(cfg); err != nil {
+		fmt.Printf("cannot unmarshal config: %v\n", err)
+	}
+
+	return cfg
 }
