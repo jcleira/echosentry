@@ -46,7 +46,7 @@ func (h *Handler) NewBuilding(c echo.Context) (err error) {
 	// c.Request.Context() down as a context.Context, so that method could make
 	// their own sentry.StartSpan calls.
 	buildingInsert := func(building *model.Building) (int64, error) {
-		span := sentry.StartSpan(c.Request().Context(), "DB insert")
+		span := sentry.StartSpan(c.Request().Context(), "handler.insert")
 		defer span.Finish()
 
 		db := h.DB.Context(c.Request().Context())
@@ -67,17 +67,15 @@ func (h *Handler) NewBuilding(c echo.Context) (err error) {
 }
 
 func (h *Handler) ListBuildings(c echo.Context) (err error) {
-	myContext := c.Request().Context()
-
-	span := sentry.StartSpan(c.Request().Context(), "handler")
-
-	session := h.DB.Context(myContext)
+	span := sentry.StartSpan(c.Request().Context(), "handler.list")
+	defer span.Finish()
 
 	buildings := make([]model.Building, 0)
 
-	if err := session.Find(&buildings); err != nil {
+	db := h.DB.Context(c.Request().Context())
+	if err := db.Find(&buildings); err != nil {
 		fmt.Println("There has been an error", err)
 	}
-	span.Finish()
+
 	return c.JSON(http.StatusOK, buildings)
 }
